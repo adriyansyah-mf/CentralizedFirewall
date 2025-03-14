@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "centralizedfirewall"
+version = "0.1.0"
+description = "Centralized Firewall"
+authors = ["adriyansyah.farhan <adriyansyah.farhan@solusi247.com>"]
+readme = "README.md"
+packages = [{include = "api"}]  # Sesuaikan dengan nama folder utama proyek
+
+[tool.poetry.dependencies]
+python = ">=3.12"
+attrs = "23.2.0"
+sqlalchemy = "2.0.30"
+python-dotenv = "1.0.1"
+passlib = "1.7.4"
+asyncpg = "0.30.0"
+pyjwt = "2.8.0"
+psycopg2-binary = "2.9.10"
+fastapi = "0.115.8"
+bcrypt = "4.1.1"
+pydantic = "2.10.6"
+python-jose = "3.3.0"
+environ-config = "24.1.0"
+python-multipart = "^0.0.20"
+uvicorn = {extras = ["standard"], version = "^0.34.0"}
+pycti = "^6.5.6"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
