@@ -198,3 +198,11 @@ class Admin:
         :return:
         """
         return await EnrichService().update_status(ip, status,apikey, self.conn)
+
+    async def report(self):
+        """
+        Counting report
+        :return:
+        """
+
+        return await AdminRead(self.conn).report()

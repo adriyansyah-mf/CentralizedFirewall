@@ -43,6 +43,7 @@ class ListMalIpResponseSchema:
     ip_address: str = attrs.field()
     hostname: str = attrs.field()
 
+
 @attrs.define(slots=False)
 class ListingIocResponseSchema:
     """
@@ -54,5 +55,13 @@ class ListingIocResponseSchema:
     is_process: bool = attrs.field()
     comment: str = attrs.field()
 
+@attrs.define(slots=False)
+class ReportResponseSchema:
+    """
+    Class For Report Response Schema
+    """
+    connected_agents: int = attrs.field()
+    blocked_ips: int = attrs.field()
+    active_alerts: int = attrs.field()
 
 

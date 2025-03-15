@@ -10,7 +10,7 @@ from api.config import cfg
 from exceptions import AdminIsNotLoginError
 from models.admin import AdminModel
 from models.blocked import BlockedModel
-from models.hosts import HostModel
+
 from models.ioc import IocModel
 from schemas.admin import ListMalIpResponseSchema, ListingIocResponseSchema
 
@@ -30,7 +30,7 @@ class EnrichService:
         :return:
         """
         data = self.opencti.stix_cyber_observable.list(search=ip_address)
-        return data[0]['objectLabel']
+        return data[0]['objectLabel'] if data else None
 
     async def add_iochost(self,conn: AsyncConnection, ip_address: str, hostname: str, apikey: str) -> int:
         """
@@ -230,9 +230,18 @@ class EnrichService:
         if result:
             return False
 
+        query = IocModel.update().values(
+            is_process=True
+        ).where(
+            IocModel.c.ip_address == ip
+        )
+
+        await conn.execute(query)
+
         query = BlockedModel.insert().values(
             mal_ip=ip,
             hostname=hostname,
+            is_blocked=True,
         )
 
         return (await conn.execute(query)).inserted_primary_key[0]

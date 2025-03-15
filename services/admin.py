@@ -7,9 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from exceptions import AdminPasswordError, GroupNotFoundError
 from helpers.authentication import PasswordHasher
 from models.admin import AdminModel
+from models.blocked import BlockedModel
 from models.hosts import HostModel
 from models.groups import GroupModel
-from schemas.admin import ApikeyResponseSchema, ListingHostsResponseSchema
+from models.ioc import IocModel
+from schemas.admin import ApikeyResponseSchema, ListingHostsResponseSchema, ReportResponseSchema
 
 
 @attrs.define
@@ -269,6 +271,46 @@ class AdminRead:
             return False
 
         return True
+
+    async def report(self) -> ReportResponseSchema:
+        """
+        Counting report
+        :return:
+        """
+
+        query = select(
+            func.count(HostModel.c.id)
+        ).select_from(
+            HostModel
+        )
+
+        total_host = (await self.conn.execute(query)).scalar()
+
+        query = select(
+            func.count(BlockedModel.c.id)
+        ).select_from(
+            BlockedModel
+        ).where(
+            BlockedModel.c.is_blocked == True
+        )
+
+        total_blocked = (await self.conn.execute(query)).scalar()
+
+        query = select(
+            func.count(IocModel.c.id)
+        ).select_from(
+            IocModel
+        ).where(
+            IocModel.c.is_process == False
+        )
+
+        total_alerts = (await self.conn.execute(query)).scalar()
+
+        return ReportResponseSchema(
+            connected_agents=total_host,
+            blocked_ips=total_blocked,
+            active_alerts=total_alerts,
+        )
 
 
 

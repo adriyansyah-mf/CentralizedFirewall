@@ -96,6 +96,13 @@ async def add_host(
         except IntegrityError:
             raise HTTPException(409, detail="Host already exists")
 
+@router.get("/report")
+async def report(admin_conn: Tuple[int, AsyncConnection] = Depends(get_id)):
+    admin_id, conn = admin_conn
+    try:
+        return await Admin(conn).report()
+    except AdminIsNotLoginError:
+        raise HTTPException(401, detail="Admin is not login")
 
 @router.get("/list-hosts")
 async def list_hosts(admin_conn: Tuple[int, AsyncConnection] = Depends(get_id)):
