@@ -215,6 +215,7 @@ class EnrichService:
                 BlockedModel.c.is_blocked == is_blocked
             )
         data = (await conn.execute(query)).fetchall()
+
         all = []
         for row in data:
             all.append(
@@ -222,7 +223,7 @@ class EnrichService:
                     id=row.id,
                     ip_address=row.mal_ip,
                     hostname=row.hostname,
-                    executed_time=row.executed_time
+                    executed_time=row.executed_time if row.executed_time else None,
                 )
             )
         return all
