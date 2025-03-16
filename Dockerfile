@@ -16,7 +16,7 @@ RUN poetry config virtualenvs.create false \
 COPY . /app
 
 # Expose the port Uvicorn will run on (default: 8000)
-EXPOSE 8000
+EXPOSE 6048
 
 # Command to run the application (defined in docker-compose.yml)
 # We *don't* put the CMD here, as we'll override it in docker-compose
