@@ -4,10 +4,7 @@ WORKDIR /app
 
 # Install Poetry
 RUN pip install poetry
-RUN pip install uvicorn
-
-# Copy project files
-COPY pyproject.toml poetry.lock ./
+RUN poetry config virtualenvs.create false
 RUN poetry install --no-root
 
 # Copy source code
