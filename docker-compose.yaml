@@ -14,9 +14,22 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres" ]
+      test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 5s
       retries: 5
+
+  init-db:
+    build: .
+    container_name: init_db
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB: postgresql+asyncpg://postgres:nkjghghghghhaqweqeu987676@db:5432/SecGaOneC2
+    command: >
+      bash -c "poetry run python -m migrations.create_table &&
+               poetry run python -m migrations.create_admin"
+    restart: "no"  # Supaya init-db cuma jalan sekali
 
   app:
     build: .
@@ -25,6 +38,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      init-db:
+        condition: service_completed_successfully
     ports:
       - "8000:8000"
     env_file:
