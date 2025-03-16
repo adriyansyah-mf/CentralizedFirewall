@@ -181,7 +181,7 @@ class AdminRead:
             activity=f"Added New Group {name}"
         )
 
-        await self.conn.execute(query)
+        await self.conn.execute(query_log)
 
 
         return (await self.conn.execute(query)).inserted_primary_key[0]
