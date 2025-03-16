@@ -5,6 +5,7 @@ from models.groups import GroupModel
 from models.ioc import IocModel
 from models.hosts import HostModel
 from models.blocked import BlockedModel
+from models.log import LogsModel
 
 async def main():
     async with engine.begin() as conn:
@@ -14,7 +15,8 @@ async def main():
             GroupModel,
             IocModel,
             HostModel,
-            BlockedModel
+            BlockedModel,
+            LogsModel
         ])
 
     await engine.dispose()

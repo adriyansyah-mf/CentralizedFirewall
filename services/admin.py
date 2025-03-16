@@ -4,14 +4,17 @@ from typing import List
 import attrs
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncConnection
+from models.log import LogsModel
+from api.config import cfg
 from exceptions import AdminPasswordError, GroupNotFoundError
-from helpers.authentication import PasswordHasher
+from helpers.authentication import PasswordHasher, BasicSalt
 from models.admin import AdminModel
 from models.blocked import BlockedModel
 from models.hosts import HostModel
 from models.groups import GroupModel
 from models.ioc import IocModel
-from schemas.admin import ApikeyResponseSchema, ListingHostsResponseSchema, ReportResponseSchema
+from schemas.admin import ApikeyResponseSchema, ListingHostsResponseSchema, ReportResponseSchema, UpdateAdminSchema, \
+    ReadAdminSchema, LogResponseSchema
 
 
 @attrs.define
@@ -71,6 +74,21 @@ class AdminRead:
             query = AdminModel.update().where(AdminModel.c.id == admin_id).values(api_key=apikey)
 
             await self.conn.execute(query)
+            _get_name_admin = select(
+                AdminModel.c.name
+            ).select_from(
+                AdminModel
+            ).where(
+                AdminModel.c.id == admin_id
+            )
+
+            name = (await self.conn.execute(_get_name_admin)).first().name
+            query = LogsModel.insert().values(
+                activity=f"Gnerated New API Key by {name}"
+            )
+
+            await self.conn.execute(query)
+
             return apikey
         except Exception as e:
             raise RuntimeError(f"Failed to generate API key: {e}")
@@ -159,6 +177,12 @@ class AdminRead:
             groups=name
         )
 
+        query_log = LogsModel.insert().values(
+            activity=f"Added New Group {name}"
+        )
+
+        await self.conn.execute(query)
+
 
         return (await self.conn.execute(query)).inserted_primary_key[0]
 
@@ -237,6 +261,12 @@ class AdminRead:
         )
         _id = (await self.conn.execute(query)).inserted_primary_key[0]
         await self.conn.commit()
+
+        query_log = LogsModel.insert().values(
+            activity=f"Added New Host {hostname}"
+        )
+
+        await self.conn.execute(query_log)
         return _id
 
     async def check_cred(self, apikey: str, hostname: str) -> bool:
@@ -311,6 +341,82 @@ class AdminRead:
             blocked_ips=total_blocked,
             active_alerts=total_alerts,
         )
+
+    async def update_me(self,id: int, data: UpdateAdminSchema):
+        """
+        Update admin
+        :param data:
+        :return:
+        hasher = PasswordHasher(BasicSalt(cfg.password.salt))
+        password_hash = hasher.hash('admin')
+        uuid = generate_uuid_from_username('admin')
+        query =  AdminModel.insert().values(
+            name='admin',
+            password=password_hash,
+            uuid=uuid
+        )
+
+        """
+        data = data.__dict__
+
+        #remove key when none or empty
+        data = {k: v for k, v in data.items() if v is not None and v != ''}
+        if 'password' in data:
+            hasher = PasswordHasher(BasicSalt(cfg.password.salt))
+            data['password'] = hasher.hash(data['password'])
+
+        query = AdminModel.update().where(AdminModel.c.id == id).values(
+            **data
+        )
+
+        await self.conn.execute(query)
+        await self.conn.commit()
+        return True
+
+    async def read_me(self, id: int) -> ReadAdminSchema:
+        """
+        Method for read by name
+        :param name:
+        :return:
+        """
+        query = (
+            select(
+                AdminModel.c.id,
+                AdminModel.c.name,
+                AdminModel.c.api_key
+            ).select_from(AdminModel)
+        ).where(
+            AdminModel.c.id == id
+        )
+        data = (await self.conn.execute(query)).first()
+
+        return ReadAdminSchema(
+            id=data.id,
+            name=data.name,
+            apikey=data.api_key
+        )
+
+    async def list_log(self) -> List[LogResponseSchema]:
+        """
+        List all logs
+        :return:
+        """
+        query = (
+            select(
+                LogsModel.c.id,
+                LogsModel.c.activity,
+            ).select_from(
+                LogsModel
+            )
+        )
+        query = query.order_by(LogsModel.c.id.desc())
+        return [
+            LogResponseSchema(
+                id=log.id,
+                activity=log.activity
+            ) for log in await self.conn.execute(query)
+        ]
+
 
 
 

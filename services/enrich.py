@@ -12,6 +12,7 @@ from models.admin import AdminModel
 from models.blocked import BlockedModel
 
 from models.ioc import IocModel
+from models.log import LogsModel
 from schemas.admin import ListMalIpResponseSchema, ListingIocResponseSchema
 
 
@@ -57,7 +58,13 @@ class EnrichService:
         query = IocModel.insert().values(
             ip_address=ip_address,
             hostname=hostname,
+            is_process=False,
         )
+
+        query_log = LogsModel.insert().values(
+            activity=f"Add ioc {ip_address} to watch list",
+        )
+        await conn.execute(query_log)
 
         return (await conn.execute(query)).inserted_primary_key[0]
 
@@ -126,6 +133,12 @@ class EnrichService:
             hostname=hostname,
         )
 
+        query_log = LogsModel.insert().values(
+            activity=f"Add malicious ip {ip} to firewall",
+        )
+
+        await conn.execute(query_log)
+
         return (await conn.execute(query)).inserted_primary_key[0]
 
     async def list_mal_ip(self, hostname: Optional[str] = None, is_blocked: Optional[bool] = None, conn: AsyncConnection = None) -> List[ListMalIpResponseSchema]:
@@ -138,6 +151,7 @@ class EnrichService:
             BlockedModel.c.id,
             BlockedModel.c.mal_ip,
             BlockedModel.c.hostname,
+            BlockedModel.c.executed_time
         ).select_from(
             BlockedModel
         )
@@ -158,7 +172,8 @@ class EnrichService:
                 ListMalIpResponseSchema(
                     id=row.id,
                     ip_address=row.mal_ip,
-                    hostname=row.hostname
+                    hostname=row.hostname,
+                    executed_time=row.executed_time,
                 )
             )
         return all
@@ -241,8 +256,13 @@ class EnrichService:
         query = BlockedModel.insert().values(
             mal_ip=ip,
             hostname=hostname,
-            is_blocked=True,
         )
+
+        query_log = LogsModel.insert().values(
+            activity=f"Block malicious ip {ip}",
+        )
+
+        await conn.execute(query_log)
 
         return (await conn.execute(query)).inserted_primary_key[0]
 
@@ -277,6 +297,12 @@ class EnrichService:
             executed_time=time
         )
 
+
+        query_log = LogsModel.insert().values(
+            activity=f"Update status of malicious ip {ip} to {status}",
+        )
+
+        await conn.execute(query_log)
 
 
         await conn.execute(query)

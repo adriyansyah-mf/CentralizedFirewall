@@ -3,6 +3,9 @@ import attrs
 from pydantic import BaseModel, Field
 from enum import Enum
 
+from sqlalchemy import BigInteger
+
+
 class AdminLoginSchema(BaseModel):
     """
     Class For Schema Admin Login
@@ -42,6 +45,7 @@ class ListMalIpResponseSchema:
     id: int = attrs.field()
     ip_address: str = attrs.field()
     hostname: str = attrs.field()
+    executed_time: BigInteger = attrs.field()
 
 
 @attrs.define(slots=False)
@@ -63,5 +67,30 @@ class ReportResponseSchema:
     connected_agents: int = attrs.field()
     blocked_ips: int = attrs.field()
     active_alerts: int = attrs.field()
+
+
+class UpdateAdminSchema(BaseModel):
+    """
+    Class For Schema Admin Login
+    """
+    name: Optional[str] = Field(None)
+    password: Optional[str] = Field(None)
+
+@attrs.define(slots=False)
+class ReadAdminSchema:
+    """
+    Class For Schema Admin Login
+    """
+    id: int = attrs.field()
+    name: str = attrs.field()
+    apikey: str = attrs.field()
+
+@attrs.define(slots=False)
+class LogResponseSchema:
+    """
+    Class For Schema Admin Login
+    """
+    id: int = attrs.field()
+    activity: str = attrs.field()
 
 

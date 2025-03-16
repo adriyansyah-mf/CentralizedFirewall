@@ -8,7 +8,7 @@ from services.admin import AdminRead
 from exceptions import AdminPasswordError
 from helpers.authentication import PasswordHasher
 from helpers.token_maker import TokenMaker
-from schemas.admin import AdminLoginSchema
+from schemas.admin import AdminLoginSchema, UpdateAdminSchema
 from services.enrich import EnrichService
 from fastapi import WebSocket
 @attrs.define
@@ -206,3 +206,28 @@ class Admin:
         """
 
         return await AdminRead(self.conn).report()
+
+    async def update_me(self, id: int, data: UpdateAdminSchema):
+        """
+        Update admin
+        :param id:
+        :param data:
+        :return:
+        """
+
+        return await AdminRead(self.conn).update_me(id, data)
+
+    async def get_admin(self, id: int):
+        """
+        Get admin
+        :param name:
+        :return:
+        """
+        return await AdminRead(self.conn).read_me(id)
+
+    async def list_log(self):
+        """
+        List all logs
+        :return:
+        """
+        return await AdminRead(self.conn).list_log()

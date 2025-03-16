@@ -11,8 +11,7 @@ from core.db import engine
 from exceptions import AdminPasswordError, AdminIsNotLoginError, GroupNotFoundError
 from facades.admin import Admin
 from helpers.authentication import BasicSalt, PasswordHasher
-from schemas.admin import AdminLoginSchema
-
+from schemas.admin import AdminLoginSchema, UpdateAdminSchema
 
 router = APIRouter(prefix='/admin', tags=["Admin"])
 
@@ -148,6 +147,36 @@ async def block_ip(ip: str, hostname: str, admin_conn: Tuple[int, AsyncConnectio
     admin_id, conn = admin_conn
     try:
         return await Admin(conn).block_ip(ip, hostname)
+    except AdminIsNotLoginError:
+        raise HTTPException(401, detail="Admin is not login")
+    except Exception as e:
+        raise HTTPException(500, detail=str(e))
+
+@router.patch("/me/update")
+async def update_me(data: UpdateAdminSchema, admin_conn: Tuple[int, AsyncConnection] = Depends(get_id)):
+    admin_id, conn = admin_conn
+    try:
+        return await Admin(conn).update_me(admin_id, data)
+    except AdminIsNotLoginError:
+        raise HTTPException(401, detail="Admin is not login")
+    except Exception as e:
+        raise HTTPException(500, detail=str(e))
+
+@router.get("/me")
+async def get_admin(admin_conn: Tuple[int, AsyncConnection] = Depends(get_id)):
+    admin_id, conn = admin_conn
+    try:
+        return await Admin(conn).get_admin(admin_id)
+    except AdminIsNotLoginError:
+        raise HTTPException(401, detail="Admin is not login")
+    except Exception as e:
+        raise HTTPException(500, detail=str(e))
+
+@router.get("/log-activity")
+async def log_activity(admin_conn: Tuple[int, AsyncConnection] = Depends(get_id)):
+    admin_id, conn = admin_conn
+    try:
+        return await Admin(conn).list_log()
     except AdminIsNotLoginError:
         raise HTTPException(401, detail="Admin is not login")
     except Exception as e:
