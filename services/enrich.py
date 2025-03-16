@@ -200,6 +200,7 @@ class EnrichService:
             BlockedModel.c.id,
             BlockedModel.c.mal_ip,
             BlockedModel.c.hostname,
+            BlockedModel.c.executed_time
         ).select_from(
             BlockedModel
         )
@@ -220,7 +221,8 @@ class EnrichService:
                 ListMalIpResponseSchema(
                     id=row.id,
                     ip_address=row.mal_ip,
-                    hostname=row.hostname
+                    hostname=row.hostname,
+                    executed_time=row.executed_time
                 )
             )
         return all
