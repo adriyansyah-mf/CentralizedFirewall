@@ -1,49 +1,28 @@
-version: '3.8'
+version: '3.9'
 
 services:
   db:
-    image: postgres:16-alpine  # Gunakan versi PostgreSQL yang stabil
-    container_name: firewall_db
+    image: postgres:15
+    restart: always
+    container_name: postgres_db
+    env_file:
+      - .env
     ports:
-      - "5432:5432"       # Ekspos port PostgreSQL (opsional, untuk akses eksternal)
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: nkjghghghghhaqweqeu987676
-      POSTGRES_DB: SecGaOneC2
+      - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data  # Persistensi data database
-    restart: unless-stopped
+      - postgres_data:/var/lib/postgresql/data
 
-  init-db:
+  app:
     build: .
-    container_name: init_db
+    restart: always
+    container_name: fastapi_app
     depends_on:
       - db
-    environment:
-      DB: postgresql+asyncpg://postgres:nkjghghghghhaqweqeu987676@localhost:5432/SecGaOneC2
-    command: >
-      bash -c "poetry run python -m migrations.create_table &&
-               poetry run python -m migrations.create_admin"
-
-  api:
-    build: .
-    container_name: firewall_api
     ports:
-      - "6048:8000"
-    depends_on:
-      - db
-      - init-db  # Pastikan init-db dijalankan sebelum API
-    environment:
-      DB: postgresql+asyncpg://postgres:nkjghghghghhaqweqeu987676@localhost:5432/SecGaOneC2
-      JWT_SECRET: qq0MjmzOkhEN4S2NjrfrndukBnalViUy
-      PASSWORD_SALT: qq0MjmzOkhEN4S2NjrfrndukBnalViUy
-      PASSWORD_TOKEN_KEY: qq0MjmzOkhEN4S2NjrfrndukBnalViUy
-    volumes:
-      - .:/app
-    restart: unless-stopped
-    command: >
-      bash -c "export PYTHONPATH=$PYTHONPATH:/app &&
-               poetry run uvicorn api.app:app --host 0.0.0.0 --port 6048 --reload"
+      - "8000:8000"
+    env_file:
+      - .env
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 volumes:
   postgres_data:
