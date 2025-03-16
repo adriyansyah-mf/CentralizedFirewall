@@ -9,7 +9,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: nkjghghghghhaqweqeu987676
-      POSTGRES_DB: license_server
+      POSTGRES_DB: SecGaOneC2
     volumes:
       - postgres_data:/var/lib/postgresql/data  # Persistensi data database
     restart: unless-stopped
