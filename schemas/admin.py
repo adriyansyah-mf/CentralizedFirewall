@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 import attrs
 from pydantic import BaseModel, Field
 from enum import Enum
@@ -49,6 +49,15 @@ class ListMalIpResponseSchema:
 
 
 @attrs.define(slots=False)
+class GeneralPaginationResponseSchema:
+    """
+    Class For Add Host Schema
+    """
+    total: int = attrs.field()
+    page: int = attrs.field()
+    per_page: int = attrs.field()
+
+@attrs.define(slots=False)
 class ListingIocResponseSchema:
     """
     Class For Add Host Schema
@@ -58,6 +67,7 @@ class ListingIocResponseSchema:
     hostname: str = attrs.field()
     is_process: bool = attrs.field()
     comment: str = attrs.field()
+    pagination: GeneralPaginationResponseSchema = attrs.field()
 
 @attrs.define(slots=False)
 class ReportResponseSchema:
@@ -92,5 +102,14 @@ class LogResponseSchema:
     """
     id: int = attrs.field()
     activity: str = attrs.field()
+
+@attrs.define(slots=False)
+class LogActivity:
+    """
+    Class For Schema Admin Login
+    """
+    pagination: GeneralPaginationResponseSchema = attrs.field()
+    data : List[LogResponseSchema] = attrs.field()
+
 
 

@@ -173,13 +173,13 @@ class Admin:
         """
         return await EnrichService().list_mal_ip_general(apikey, hostname, is_blocked, self.conn)
 
-    async def list_ioc(self, hostname: Optional[str] = None, is_blocked: Optional[bool] = False):
+    async def list_ioc(self,page: Optional[int] = 1, per_page: Optional[int] = 5, hostname: Optional[str] = None, is_blocked: Optional[bool] = False):
         """
         List all iocs ip
         :param hostname:
         :return:
         """
-        return await EnrichService().list_iochost(hostname, is_blocked, self.conn)
+        return await EnrichService().list_iochost(page, per_page, hostname, is_blocked, self.conn)
 
     async def block_ip(self, ip: str, hostname: str) -> int:
         """
@@ -225,9 +225,9 @@ class Admin:
         """
         return await AdminRead(self.conn).read_me(id)
 
-    async def list_log(self):
+    async def list_log(self, page: Optional[int] = 1, per_page: Optional[int] = 5):
         """
         List all logs
         :return:
         """
-        return await AdminRead(self.conn).list_log()
+        return await AdminRead(self.conn).list_log(page, per_page)

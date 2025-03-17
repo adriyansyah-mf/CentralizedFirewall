@@ -9,7 +9,6 @@ from models.log import LogsModel
 
 async def main():
     async with engine.begin() as conn:
-        await conn.run_sync(meta.drop_all)
         await conn.run_sync(meta.create_all, tables=[
             AdminModel,
             GroupModel,

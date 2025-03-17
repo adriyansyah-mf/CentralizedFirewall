@@ -13,7 +13,7 @@ from models.blocked import BlockedModel
 
 from models.ioc import IocModel
 from models.log import LogsModel
-from schemas.admin import ListMalIpResponseSchema, ListingIocResponseSchema
+from schemas.admin import ListMalIpResponseSchema, ListingIocResponseSchema, GeneralPaginationResponseSchema
 
 
 @attrs.define
@@ -68,7 +68,7 @@ class EnrichService:
 
         return (await conn.execute(query)).inserted_primary_key[0]
 
-    async def list_iochost(self, hostname: Optional[str] = None, is_process: Optional[bool] = None, conn: AsyncConnection = None) -> List[ListingIocResponseSchema]:
+    async def list_iochost(self,page: Optional[int] = 1, per_page: Optional[int] = 5, hostname: Optional[str] = None, is_process: Optional[bool] = None, conn: AsyncConnection = None) -> List[ListingIocResponseSchema]:
         """
         List all iocs ip
         :param hostname:
@@ -84,6 +84,9 @@ class EnrichService:
             IocModel
         )
 
+        #pagination
+        query = query.limit(per_page).offset((page - 1) * per_page)
+
         if hostname:
             query = query.where(
                 IocModel.c.hostname == hostname
@@ -94,6 +97,14 @@ class EnrichService:
                 IocModel.c.is_process == is_process
             )
         data = (await conn.execute(query)).fetchall()
+
+        _query_total = select(
+            func.count(IocModel.c.id)
+        ).select_from(
+            IocModel
+        )
+
+        total = (await conn.execute(_query_total)).scalar()
         all = []
         for row in data:
             all.append(
@@ -102,7 +113,13 @@ class EnrichService:
                     ip_address=row.ip_address,
                     hostname=row.hostname,
                     is_process=row.is_process,
-                    comment=row.comment
+                    comment=row.comment,
+                    pagination=GeneralPaginationResponseSchema(
+                        total=total,
+                        page=page,
+                        per_page=per_page
+                    )
+
                 )
             )
         return all

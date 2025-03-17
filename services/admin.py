@@ -1,5 +1,5 @@
 import secrets
-from typing import List
+from typing import List, Optional
 
 import attrs
 from sqlalchemy import select, func
@@ -14,7 +14,7 @@ from models.hosts import HostModel
 from models.groups import GroupModel
 from models.ioc import IocModel
 from schemas.admin import ApikeyResponseSchema, ListingHostsResponseSchema, ReportResponseSchema, UpdateAdminSchema, \
-    ReadAdminSchema, LogResponseSchema
+    ReadAdminSchema, LogResponseSchema, GeneralPaginationResponseSchema, LogActivity
 
 
 @attrs.define
@@ -396,7 +396,7 @@ class AdminRead:
             apikey=data.api_key
         )
 
-    async def list_log(self) -> List[LogResponseSchema]:
+    async def list_log(self, page: Optional[int] = 1, per_page: Optional[int] = 5) -> LogActivity:
         """
         List all logs
         :return:
@@ -410,12 +410,33 @@ class AdminRead:
             )
         )
         query = query.order_by(LogsModel.c.id.desc())
-        return [
-            LogResponseSchema(
+
+        _query_total = select(
+            func.count(LogsModel.c.id)
+        ).select_from(
+            LogsModel
+        )
+
+        query = query.limit(per_page).offset((page - 1) * per_page)
+
+        total = (await self.conn.execute(_query_total)).scalar()
+
+
+        data = (await self.conn.execute(query)).fetchall()
+
+
+
+        return LogActivity(
+            pagination=GeneralPaginationResponseSchema(
+                total=total,
+                page=page,
+                per_page=per_page
+            ),
+            data=[LogResponseSchema(
                 id=log.id,
                 activity=log.activity
-            ) for log in await self.conn.execute(query)
-        ]
+            ) for log in data]
+        )
 
 
 
