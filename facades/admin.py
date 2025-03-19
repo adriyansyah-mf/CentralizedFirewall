@@ -148,14 +148,14 @@ class Admin:
         """
         return await EnrichService().add_mal_ip(self.conn, ip, hostname, apikey)
 
-    async def add_ioc(self, ip: str, hostname: str, apikey: str) -> int:
+    async def add_ioc(self, ip: str, hostname: str, apikey: str, comment: Optional[str] = None) -> int:
         """
         Add malicious ip to firewall
         :param ip:
         :param hostname:
         :return:
         """
-        return await EnrichService().add_iochost(self.conn, ip, hostname, apikey)
+        return await EnrichService().add_iochost(self.conn, ip, hostname, apikey, comment)
 
     async def list_mal_ip(self, hostname: str, is_blocked: bool):
         """
@@ -173,13 +173,13 @@ class Admin:
         """
         return await EnrichService().list_mal_ip_general(apikey, hostname, is_blocked, self.conn)
 
-    async def list_ioc(self,page: Optional[int] = 1, per_page: Optional[int] = 5, hostname: Optional[str] = None, is_blocked: Optional[bool] = False):
+    async def list_ioc(self,page: Optional[int] = 1, per_page: Optional[int] = 5, hostname: Optional[str] = None, is_blocked: Optional[bool] = False, ip: Optional[str] = None):
         """
         List all iocs ip
         :param hostname:
         :return:
         """
-        return await EnrichService().list_iochost(page, per_page, hostname, is_blocked, self.conn)
+        return await EnrichService().list_iochost(page, per_page, hostname, is_blocked, self.conn, ip)
 
     async def block_ip(self, ip: str, hostname: str) -> int:
         """

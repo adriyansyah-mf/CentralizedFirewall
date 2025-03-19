@@ -133,10 +133,10 @@ async def list_mal_ip(hostname: Optional[str] = None, is_blocked: Optional[bool]
         raise HTTPException(500, detail=str(e))
 
 @router.get("/list-ioc")
-async def list_ioc(page: Optional[int] = 1, per_page: Optional[int] = 5, hostname: Optional[str] = None, is_blocked: Optional[bool] = None, admin_conn: Tuple[int, AsyncConnection] = Depends(get_id)):
+async def list_ioc(ip:Optional[str] = None, page: Optional[int] = 1, per_page: Optional[int] = 5, hostname: Optional[str] = None, is_blocked: Optional[bool] = None, admin_conn: Tuple[int, AsyncConnection] = Depends(get_id)):
     admin_id, conn = admin_conn
     try:
-        return await Admin(conn).list_ioc(page, per_page, hostname, is_blocked)
+        return await Admin(conn).list_ioc(page, per_page, hostname, is_blocked, ip)
     except AdminIsNotLoginError:
         raise HTTPException(401, detail="Admin is not login")
     except Exception as e:

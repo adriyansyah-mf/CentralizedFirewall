@@ -1,4 +1,4 @@
-
+from typing import Optional
 
 from fastapi import APIRouter, HTTPException
 
@@ -14,6 +14,7 @@ async def add_ip(
     ip: str,
     hostname: str,
     apikey: str,
+    comment: Optional[str] = None,
 ):
     """
     Add malicious IP to the firewall
@@ -25,7 +26,7 @@ async def add_ip(
     """
     async with engine.begin() as conn:
 
-        return await Admin(conn).add_ioc(ip, hostname, apikey)
+        return await Admin(conn).add_ioc(ip, hostname, apikey, comment)
 
 
 @router.get("/list-ips")

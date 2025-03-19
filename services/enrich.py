@@ -33,7 +33,7 @@ class EnrichService:
         data = self.opencti.stix_cyber_observable.list(search=ip_address)
         return data[0]['objectLabel'] if data else None
 
-    async def add_iochost(self,conn: AsyncConnection, ip_address: str, hostname: str, apikey: str) -> int:
+    async def add_iochost(self,conn: AsyncConnection, ip_address: str, hostname: str, apikey: str, comment: Optional[str] = None) -> int:
         """
         Add malicious ip to list watch by admin
         :param conn:
@@ -59,6 +59,7 @@ class EnrichService:
             ip_address=ip_address,
             hostname=hostname,
             is_process=False,
+            comment=comment if comment else None
         )
 
         query_log = LogsModel.insert().values(
@@ -68,7 +69,7 @@ class EnrichService:
 
         return (await conn.execute(query)).inserted_primary_key[0]
 
-    async def list_iochost(self,page: Optional[int] = 1, per_page: Optional[int] = 5, hostname: Optional[str] = None, is_process: Optional[bool] = None, conn: AsyncConnection = None) -> List[ListingIocResponseSchema]:
+    async def list_iochost(self,page: Optional[int] = 1, per_page: Optional[int] = 5, hostname: Optional[str] = None, is_process: Optional[bool] = None, conn: AsyncConnection = None, ip: Optional[str] = None) -> List[ListingIocResponseSchema]:
         """
         List all iocs ip
         :param hostname:
@@ -96,6 +97,8 @@ class EnrichService:
             query = query.where(
                 IocModel.c.is_process == is_process
             )
+
+        query = query.order_by(IocModel.c.id.desc())
         data = (await conn.execute(query)).fetchall()
 
         _query_total = select(
@@ -182,6 +185,7 @@ class EnrichService:
             query = query.where(
                 BlockedModel.c.is_blocked == is_blocked
             )
+
         data = (await conn.execute(query)).fetchall()
         all = []
         for row in data:
