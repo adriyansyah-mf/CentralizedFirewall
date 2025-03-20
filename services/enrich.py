@@ -5,7 +5,7 @@ import attrs
 import pycti
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncConnection
-
+import requests
 from api.config import cfg
 from exceptions import AdminIsNotLoginError
 from models.admin import AdminModel
@@ -24,6 +24,14 @@ class EnrichService:
     opencti =  pycti.OpenCTIApiClient(cfg.opencti.url, cfg.opencti.token)
 
 
+    def _abuse_ip(self, ip_address: str):
+        url = "https://api.abuseipdb.com/api/v2/check"
+
+        headers = {
+            "Key": cfg.abuseip.token,
+            "Accept": "application/json"
+        }
+
     def enrich(self, ip_address: str):
         """
         Enrich data with opencti data
@@ -31,6 +39,7 @@ class EnrichService:
         :return:
         """
         data = self.opencti.stix_cyber_observable.list(search=ip_address)
+
         return data[0]['objectLabel'] if data else None
 
     async def add_iochost(self,conn: AsyncConnection, ip_address: str, hostname: str, apikey: str, comment: Optional[str] = None) -> int:
@@ -96,6 +105,10 @@ class EnrichService:
         if is_process is not None:
             query = query.where(
                 IocModel.c.is_process == is_process
+            )
+        if ip is not None:
+            query = query.where(
+                IocModel.c.ip_address == ip
             )
 
         query = query.order_by(IocModel.c.id.desc())
