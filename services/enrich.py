@@ -1,4 +1,5 @@
 from datetime import datetime
+from sqlite3 import IntegrityError
 from typing import Optional, List
 
 import attrs
@@ -64,19 +65,44 @@ class EnrichService:
         if result == 0:
             return False
 
-        query = IocModel.insert().values(
-            ip_address=ip_address,
-            hostname=hostname,
-            is_process=False,
-            comment=comment if comment else None
+        _query_check_counter = select(
+            IocModel.c.counter
+        ).select_from(
+            IocModel
+        ).where(
+            IocModel.c.ip_address == ip_address
         )
 
-        query_log = LogsModel.insert().values(
-            activity=f"Add ioc {ip_address} to watch list",
-        )
-        await conn.execute(query_log)
+        counter = (await conn.execute(_query_check_counter)).scalar()
 
-        return (await conn.execute(query)).inserted_primary_key[0]
+        if counter is None:
+            query = IocModel.insert().values(
+                ip_address=ip_address,
+                hostname=hostname,
+                is_process=False,
+                comment=comment if comment else None,
+                counter=counter + 1 if counter else 1
+            )
+
+            query_log = LogsModel.insert().values(
+                activity=f"Add ioc {ip_address} to watch list",
+            )
+            await conn.execute(query_log)
+
+            return (await conn.execute(query)).inserted_primary_key[0]
+        else:
+            query = IocModel.update().where(
+                IocModel.c.ip_address == ip_address
+            ).values(
+                counter=counter + 1
+            )
+            query_log = LogsModel.insert().values(
+                activity=f"Add ioc {ip_address} to watch list",
+            )
+            await conn.execute(query_log)
+            await conn.execute(query)
+            return True
+
 
     async def list_iochost(self,page: Optional[int] = 1, per_page: Optional[int] = 5, hostname: Optional[str] = None, is_process: Optional[bool] = None, conn: AsyncConnection = None, ip: Optional[str] = None) -> List[ListingIocResponseSchema]:
         """
@@ -89,7 +115,8 @@ class EnrichService:
             IocModel.c.ip_address,
             IocModel.c.hostname,
             IocModel.c.is_process,
-            IocModel.c.comment
+            IocModel.c.comment,
+            IocModel.c.counter
         ).select_from(
             IocModel
         )
@@ -130,6 +157,7 @@ class EnrichService:
                     hostname=row.hostname,
                     is_process=row.is_process,
                     comment=row.comment,
+                    counter=row.counter,
                     pagination=GeneralPaginationResponseSchema(
                         total=total,
                         page=page,

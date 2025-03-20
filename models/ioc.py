@@ -9,4 +9,5 @@ IocModel = Table(
     Column('is_process', Boolean, nullable=True, unique=False),
     Column('comment', Text, nullable=True, unique=False),
     Column('hostname', Unicode(100), nullable=True, unique=False),
+    Column('counter', BigInteger, nullable=True, unique=False),
 )

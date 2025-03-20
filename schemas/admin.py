@@ -67,6 +67,7 @@ class ListingIocResponseSchema:
     hostname: str = attrs.field()
     is_process: bool = attrs.field()
     comment: str = attrs.field()
+    counter: int = attrs.field()
     pagination: GeneralPaginationResponseSchema = attrs.field()
 
 @attrs.define(slots=False)
