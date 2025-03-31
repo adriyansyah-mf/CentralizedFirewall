@@ -53,11 +53,4 @@ Let me know if you need any modifications! 🚀
 
 If you find this project helpful, consider supporting me through GitHub Sponsors:  
 
-<p align="center">
-  <iframe src="https://github.com/sponsors/adriyansyah-mf/button" 
-          title="Sponsor adriyansyah-mf" 
-          height="32" 
-          width="114" 
-          style="border: 0; border-radius: 6px;">
-  </iframe>
-</p>
+[![Sponsor](https://img.shields.io/badge/Sponsor-GitHub-%23ea4aaa?style=for-the-badge&logo=github)](https://github.com/sponsors/adriyansyah-mf)
