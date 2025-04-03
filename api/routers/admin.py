@@ -123,10 +123,10 @@ async def enrich(ip_address: str, admin_conn: Tuple[int, AsyncConnection] = Depe
         raise HTTPException(500, detail=str(e))
 
 @router.get("/list-mal-ip")
-async def list_mal_ip(hostname: Optional[str] = None, is_blocked: Optional[bool] = None, admin_conn: Tuple[int, AsyncConnection] = Depends(get_id)):
+async def list_mal_ip(hostname: Optional[str] = None, is_blocked: Optional[bool] = None, admin_conn: Tuple[int, AsyncConnection] = Depends(get_id), page: Optional[int] = 1, per_page: Optional[int] = 5):
     admin_id, conn = admin_conn
     try:
-        return await Admin(conn).list_mal_ip(hostname, is_blocked)
+        return await Admin(conn).list_mal_ip(hostname, is_blocked, page, per_page)
     except AdminIsNotLoginError:
         raise HTTPException(401, detail="Admin is not login")
     except Exception as e:
@@ -182,6 +182,16 @@ async def log_activity(page: Optional[int] = 1, per_page: Optional[int] = 5, adm
     except Exception as e:
         raise HTTPException(500, detail=str(e))
 
+
+@router.get("/check-reputation/{ip_address}")
+def check_reputation(ip_address: str, admin_conn: Tuple[int, AsyncConnection] = Depends(get_id)):
+    admin_id, conn = admin_conn
+    try:
+        return Admin(conn).check_reputation(ip_address)
+    except AdminIsNotLoginError:
+        raise HTTPException(401, detail="Admin is not login")
+    except Exception as e:
+        raise HTTPException(500, detail=str(e))
 
 
 

@@ -1,7 +1,6 @@
 from datetime import datetime
-from sqlite3 import IntegrityError
 from typing import Optional, List
-
+import json
 import attrs
 import pycti
 from sqlalchemy import select, func
@@ -14,7 +13,8 @@ from models.blocked import BlockedModel
 
 from models.ioc import IocModel
 from models.log import LogsModel
-from schemas.admin import ListMalIpResponseSchema, ListingIocResponseSchema, GeneralPaginationResponseSchema
+from schemas.admin import ListMalIpResponseSchema, ListingIocResponseSchema, GeneralPaginationResponseSchema, \
+    ListingMalIpResponseSchemaPaginate
 
 
 @attrs.define
@@ -25,13 +25,24 @@ class EnrichService:
     opencti =  pycti.OpenCTIApiClient(cfg.opencti.url, cfg.opencti.token)
 
 
-    def _abuse_ip(self, ip_address: str):
+    def check_reputation(self, ip_address: str):
         url = "https://api.abuseipdb.com/api/v2/check"
 
         headers = {
-            "Key": cfg.abuseip.token,
+            "Key": cfg.abuseipdb_api_key,
             "Accept": "application/json"
         }
+
+        querystring = {
+            'ipAddress': ip_address,
+            'maxAgeInDays': '90'
+        }
+
+        response = requests.request("GET", url, headers=headers, params=querystring)
+
+        decodedResponse = json.loads(response.text)
+
+        return decodedResponse
 
     def enrich(self, ip_address: str):
         """
@@ -202,7 +213,7 @@ class EnrichService:
 
         return (await conn.execute(query)).inserted_primary_key[0]
 
-    async def list_mal_ip(self, hostname: Optional[str] = None, is_blocked: Optional[bool] = None, conn: AsyncConnection = None) -> List[ListMalIpResponseSchema]:
+    async def list_mal_ip(self, hostname: Optional[str] = None, is_blocked: Optional[bool] = None, conn: AsyncConnection = None, page: Optional[int] = 1, per_page: Optional[int] = 5,) -> List[ListingMalIpResponseSchemaPaginate]:
         """
         List all malicious ip
         :param hostname:
@@ -217,6 +228,8 @@ class EnrichService:
             BlockedModel
         )
 
+        query = query.limit(per_page).offset((page - 1) * per_page)
+
         if hostname:
             query = query.where(
                 BlockedModel.c.hostname == hostname
@@ -228,6 +241,11 @@ class EnrichService:
             )
 
         data = (await conn.execute(query)).fetchall()
+
+
+        query_total = func.count(BlockedModel.c.id)
+
+        total = (await conn.execute(query_total)).scalar()
         all = []
         for row in data:
             all.append(
@@ -238,7 +256,14 @@ class EnrichService:
                     executed_time=row.executed_time,
                 )
             )
-        return all
+
+        final_result = ListingMalIpResponseSchemaPaginate(
+            page=page,
+            per_page=per_page,
+            total=total,
+            data=all
+        )
+        return final_result
 
     async def list_mal_ip_general(self,apikey: str, hostname: Optional[str] = None, is_blocked: Optional[bool] = None,
                           conn: AsyncConnection = None) -> List[ListMalIpResponseSchema]:
@@ -301,7 +326,7 @@ class EnrichService:
         query = select(
             BlockedModel.c.id
         ).select_from(
-            IocModel
+            BlockedModel
         ).where(
             BlockedModel.c.mal_ip == ip
         )
@@ -372,10 +397,3 @@ class EnrichService:
 
         await conn.execute(query)
         return True
-
-
-
-
-
-
-

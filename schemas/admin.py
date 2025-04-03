@@ -47,6 +47,16 @@ class ListMalIpResponseSchema:
     hostname: str = attrs.field()
     executed_time: BigInteger = attrs.field()
 
+@attrs.define(slots=False)
+class ListingMalIpResponseSchemaPaginate:
+    """
+    Listing ip paginate
+    """
+    page: int = attrs.field()
+    per_page: int = attrs.field()
+    total: int = attrs.field()
+    data: List[ListMalIpResponseSchema] = attrs.field()
+
 
 @attrs.define(slots=False)
 class GeneralPaginationResponseSchema:

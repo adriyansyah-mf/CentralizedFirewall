@@ -157,13 +157,13 @@ class Admin:
         """
         return await EnrichService().add_iochost(self.conn, ip, hostname, apikey, comment)
 
-    async def list_mal_ip(self, hostname: str, is_blocked: bool):
+    async def list_mal_ip(self, hostname: Optional[str] = None, is_blocked: Optional[str] = None, page: Optional[int] = None, per_page: Optional[int] = None):
         """
         List all malicious ip
         :param hostname:
         :return:
         """
-        return await EnrichService().list_mal_ip(hostname, is_blocked, self.conn)
+        return await EnrichService().list_mal_ip(hostname, is_blocked, self.conn, page, per_page)
 
     async def list_mal_ip_general(self, hostname: str, is_blocked: bool, apikey: str):
         """
@@ -231,3 +231,11 @@ class Admin:
         :return:
         """
         return await AdminRead(self.conn).list_log(page, per_page)
+
+    def check_reputation(self, ip_address: str):
+        """
+        Check reputation of ip
+        :param ip_address:
+        :return:
+        """
+        return EnrichService().check_reputation(ip_address)

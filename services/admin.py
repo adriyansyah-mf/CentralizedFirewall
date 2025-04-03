@@ -347,14 +347,6 @@ class AdminRead:
         Update admin
         :param data:
         :return:
-        hasher = PasswordHasher(BasicSalt(cfg.password.salt))
-        password_hash = hasher.hash('admin')
-        uuid = generate_uuid_from_username('admin')
-        query =  AdminModel.insert().values(
-            name='admin',
-            password=password_hash,
-            uuid=uuid
-        )
 
         """
         data = data.__dict__

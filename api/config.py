@@ -27,5 +27,6 @@ class Config:
     jwt: Jwt = environ.group(Jwt)
     password: Password = environ.group(Password)
     opencti: Opencti = environ.group(Opencti)
+    abuseipdb_api_key: str = environ.var()
 
 cfg: Config = environ.to_config(Config)
