@@ -5,7 +5,7 @@ from core.db import meta
 IocModel = Table(
     'iocs', meta,
     Column('id', BigInteger, primary_key=True, autoincrement=True),
-    Column('ip_address', Unicode(100), nullable=True, unique=True),
+    Column('ip_address', Unicode(100), nullable=True, unique=False),
     Column('is_process', Boolean, nullable=True, unique=False),
     Column('comment', Text, nullable=True, unique=False),
     Column('hostname', Unicode(100), nullable=True, unique=False),

@@ -81,8 +81,11 @@ class EnrichService:
         ).select_from(
             IocModel
         ).where(
-            IocModel.c.ip_address == ip_address
+            IocModel.c.ip_address == ip_address,
+            IocModel.c.hostname == hostname
         )
+
+        #TODO abis di edit
 
         counter = (await conn.execute(_query_check_counter)).scalar()
 
@@ -102,6 +105,7 @@ class EnrichService:
 
             return (await conn.execute(query)).inserted_primary_key[0]
         else:
+
             query = IocModel.update().where(
                 IocModel.c.ip_address == ip_address
             ).values(
